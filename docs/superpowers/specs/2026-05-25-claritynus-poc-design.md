@@ -87,7 +87,7 @@ RLS is **enabled with no policies**. This locks out the `anon` and `authenticate
 ┌─────────────────────────────────────────────────────────────┐
 │  app/lib/supabase-server.ts                                 │
 │  - Server-only Supabase client using                        │
-│    SUPABASE_SERVICE_ROLE_KEY                                │
+│    SUPABASE_SECRET_KEY                                │
 │  - Never imported from a client component                   │
 └─────────────────────────────────────────────────────────────┘
                             │
@@ -105,10 +105,10 @@ The existing `app/lib/supabase.ts` (browser-side client using the publishable ke
 1. `supabase/migrations/0001_clarities.sql` — DDL for the `clarities` table, indexes, and `alter table … enable row level security;`.
 
 ### 5.2 Environment
-2. `.env.local.example` — template listing `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and the new `SUPABASE_SERVICE_ROLE_KEY`. The user populates `.env.local` from this.
+2. `.env.local.example` — template listing `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and the new `SUPABASE_SECRET_KEY`. The user populates `.env.local` from this.
 
 ### 5.3 Server / backend code
-3. `app/lib/supabase-server.ts` — exports a singleton Supabase client constructed from server-only env vars. Guarded with a runtime check that `SUPABASE_SERVICE_ROLE_KEY` is set.
+3. `app/lib/supabase-server.ts` — exports a singleton Supabase client constructed from server-only env vars. Guarded with a runtime check that `SUPABASE_SECRET_KEY` is set.
 4. `app/lib/clarities.ts` — data layer functions and types. Pure data access; no Next.js imports.
 5. `app/actions.ts` — `'use server'` directives, the three mutating server actions. Each calls `revalidatePath('/')`; create + update also `redirect('/')` on success.
 
@@ -145,10 +145,10 @@ The existing `app/lib/supabase.ts` (browser-side client using the publishable ke
 ```
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=...     # existing, used by app/lib/supabase.ts
-SUPABASE_SERVICE_ROLE_KEY=...                # NEW, server-only, used by app/lib/supabase-server.ts
+SUPABASE_SECRET_KEY=...                # NEW, server-only, used by app/lib/supabase-server.ts
 ```
 
-`SUPABASE_SERVICE_ROLE_KEY` MUST NOT be prefixed with `NEXT_PUBLIC_`. `app/lib/supabase-server.ts` MUST NOT be imported from any client component.
+`SUPABASE_SECRET_KEY` MUST NOT be prefixed with `NEXT_PUBLIC_`. `app/lib/supabase-server.ts` MUST NOT be imported from any client component.
 
 ## 9. Acceptance criteria
 
