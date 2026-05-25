@@ -16,8 +16,10 @@ export async function listClarities(options?: {
 
   const moduleFilter = options?.module?.trim();
   if (moduleFilter) {
-    // Case-insensitive contains match on module_code.
-    query = query.ilike("module_code", `%${moduleFilter}%`);
+    // Case-insensitive contains match. Escape ilike wildcards so user input
+    // is treated as a literal substring.
+    const escaped = moduleFilter.replace(/[\\%_]/g, "\\$&");
+    query = query.ilike("module_code", `%${escaped}%`);
   }
 
   const { data, error } = await query;

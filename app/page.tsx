@@ -50,16 +50,20 @@ export default async function Home({
 
       {clarities.length === 0 ? (
         <p className="text-gray-600">
-          {moduleFilter
-            ? `No clarities found for "${moduleFilter}".`
-            : "No clarities yet. "}
-          <Link
-            href="/clarities/new"
-            className="underline underline-offset-4"
-          >
-            Write the first one
-          </Link>
-          .
+          {moduleFilter ? (
+            `No clarities found for "${moduleFilter}".`
+          ) : (
+            <>
+              No clarities yet.{" "}
+              <Link
+                href="/clarities/new"
+                className="underline underline-offset-4"
+              >
+                Write the first one
+              </Link>
+              .
+            </>
+          )}
         </p>
       ) : (
         <ul className="flex flex-col gap-4">
