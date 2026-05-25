@@ -1,10 +1,105 @@
-export default function Home() {
+import Link from "next/link";
+import { listClarities } from "@/app/lib/clarities";
+import { deleteClarityAction } from "@/app/actions";
+
+type SearchParams = Promise<{ module?: string | string[] }>;
+
+function firstString(v: string | string[] | undefined): string | undefined {
+  return Array.isArray(v) ? v[0] : v;
+}
+
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleString();
+}
+
+function excerpt(body: string, max = 180): string {
+  const trimmed = body.trim().replace(/\s+/g, " ");
+  return trimmed.length > max ? trimmed.slice(0, max) + "…" : trimmed;
+}
+
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
+  const params = await searchParams;
+  const moduleFilter = firstString(params.module)?.trim() ?? "";
+  const clarities = await listClarities({ module: moduleFilter || undefined });
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-8">
-      <h1 className="text-5xl font-bold">ClarityNUS</h1>
-      <p className="mt-4 text-lg text-gray-600">
-        Bite-sized clarity, crowd-sourced understanding.
-      </p>
-    </main>
+    <div className="flex flex-col gap-6 max-w-3xl">
+      <form method="get" className="flex gap-2 items-end">
+        <label className="flex flex-col gap-1 flex-1">
+          <span className="text-sm font-medium">Filter by module code</span>
+          <input
+            name="module"
+            defaultValue={moduleFilter}
+            placeholder="e.g. CS2030S"
+            className="border rounded px-3 py-2"
+          />
+        </label>
+        <button type="submit" className="border rounded px-4 py-2">
+          Filter
+        </button>
+        {moduleFilter && (
+          <Link href="/" className="text-sm underline underline-offset-4 py-2">
+            Clear
+          </Link>
+        )}
+      </form>
+
+      {clarities.length === 0 ? (
+        <p className="text-gray-600">
+          {moduleFilter ? (
+            `No clarities found for "${moduleFilter}".`
+          ) : (
+            <>
+              No clarities yet.{" "}
+              <Link
+                href="/clarities/new"
+                className="underline underline-offset-4"
+              >
+                Write the first one
+              </Link>
+              .
+            </>
+          )}
+        </p>
+      ) : (
+        <ul className="flex flex-col gap-4">
+          {clarities.map((c) => (
+            <li key={c.id} className="border rounded p-4 flex flex-col gap-2">
+              <div className="flex items-baseline justify-between gap-3">
+                <h2 className="text-lg font-semibold">{c.title}</h2>
+                <span className="text-xs font-mono text-gray-500">
+                  {c.module_code}
+                </span>
+              </div>
+              <p className="text-sm text-gray-700">{excerpt(c.body)}</p>
+              <div className="flex items-center justify-between text-xs text-gray-500">
+                <span>{formatDate(c.created_at)}</span>
+                <div className="flex gap-3 items-center">
+                  <Link
+                    href={`/clarities/${c.id}/edit`}
+                    className="underline underline-offset-4"
+                  >
+                    Edit
+                  </Link>
+                  <form action={deleteClarityAction}>
+                    <input type="hidden" name="id" value={c.id} />
+                    <button
+                      type="submit"
+                      className="underline underline-offset-4 text-red-600"
+                    >
+                      Delete
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
