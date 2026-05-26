@@ -5,6 +5,8 @@ import type { Clarity, ClarityInput } from "@/app/lib/clarity-types";
 const TABLE = "clarities";
 const COLUMNS = "id, title, body, module_code, created_at, updated_at";
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function listClarities(options?: {
   module?: string;
 }): Promise<Clarity[]> {
@@ -28,6 +30,11 @@ export async function listClarities(options?: {
 }
 
 export async function getClarity(id: string): Promise<Clarity | null> {
+  // A non-UUID id can't possibly resolve to a row, and the Postgres uuid
+  // column rejects it with a 22P02 error. Treat it as "not found" so the
+  // edit page renders a clean 404 instead of a 500.
+  if (!UUID_RE.test(id)) return null;
+
   const supabase = getServerSupabase();
   const { data, error } = await supabase
     .from(TABLE)
