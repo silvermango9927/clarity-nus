@@ -27,29 +27,37 @@ export default async function Home({
   const clarities = await listClarities({ module: moduleFilter || undefined });
 
   return (
-    <div className="flex flex-col gap-6 max-w-3xl">
+    <div className="flex flex-col gap-8 max-w-3xl">
       <form method="get" className="flex gap-2 items-end">
         <label className="flex flex-col gap-1 flex-1">
-          <span className="text-sm font-medium">Filter by module code</span>
+          <span className="text-xs uppercase tracking-wider text-muted">
+            Filter by module code
+          </span>
           <input
             name="module"
             defaultValue={moduleFilter}
             placeholder="e.g. CS2030S"
-            className="border rounded px-3 py-2"
+            className="border border-rule rounded px-3 py-2 bg-transparent focus:outline-none focus:border-accent"
           />
         </label>
-        <button type="submit" className="border rounded px-4 py-2">
+        <button
+          type="submit"
+          className="border border-foreground rounded px-4 py-2 font-medium hover:bg-foreground hover:text-background"
+        >
           Filter
         </button>
         {moduleFilter && (
-          <Link href="/" className="text-sm underline underline-offset-4 py-2">
+          <Link
+            href="/"
+            className="text-sm underline underline-offset-4 py-2 text-muted"
+          >
             Clear
           </Link>
         )}
       </form>
 
       {clarities.length === 0 ? (
-        <p className="text-gray-600">
+        <p className="text-muted">
           {moduleFilter ? (
             `No clarities found for "${moduleFilter}".`
           ) : (
@@ -57,7 +65,7 @@ export default async function Home({
               No clarities yet.{" "}
               <Link
                 href="/clarities/new"
-                className="underline underline-offset-4"
+                className="underline underline-offset-4 decoration-accent decoration-2 text-foreground"
               >
                 Write the first one
               </Link>
@@ -68,15 +76,20 @@ export default async function Home({
       ) : (
         <ul className="flex flex-col gap-4">
           {clarities.map((c) => (
-            <li key={c.id} className="border rounded p-4 flex flex-col gap-2">
+            <li
+              key={c.id}
+              className="border border-rule rounded-lg p-5 flex flex-col gap-3 bg-white/40"
+            >
               <div className="flex items-baseline justify-between gap-3">
-                <h2 className="text-lg font-semibold">{c.title}</h2>
-                <span className="text-xs font-mono text-gray-500">
+                <h2 className="font-serif text-xl leading-tight">{c.title}</h2>
+                <span className="shrink-0 text-xs font-mono px-2 py-0.5 rounded-full bg-badge text-badge-fg tracking-wide">
                   {c.module_code}
                 </span>
               </div>
-              <p className="text-sm text-gray-700">{excerpt(c.body)}</p>
-              <div className="flex items-center justify-between text-xs text-gray-500">
+              <p className="text-sm text-(--foreground)/80 leading-relaxed">
+                {excerpt(c.body)}
+              </p>
+              <div className="flex items-center justify-between text-xs text-muted pt-1 border-t border-rule">
                 <span>{formatDate(c.created_at)}</span>
                 <div className="flex gap-3 items-center">
                   <Link
@@ -89,7 +102,7 @@ export default async function Home({
                     <input type="hidden" name="id" value={c.id} />
                     <button
                       type="submit"
-                      className="underline underline-offset-4 text-red-600"
+                      className="underline underline-offset-4 text-accent"
                     >
                       Delete
                     </button>
