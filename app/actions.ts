@@ -8,15 +8,15 @@ import {
   deleteClarity,
 } from "@/app/lib/clarities";
 import {
-  validateClarityInput,
+  validateInput,
   type ClarityActionState,
 } from "@/app/lib/clarity-types";
 
 export async function createClarityAction(
-  _prevState: ClarityActionState,
+  _prev: ClarityActionState,
   formData: FormData,
 ): Promise<ClarityActionState> {
-  const result = validateClarityInput({
+  const result = validateInput({
     title: formData.get("title"),
     body: formData.get("body"),
     module_code: formData.get("module_code"),
@@ -37,7 +37,7 @@ export async function createClarityAction(
 }
 
 export async function updateClarityAction(
-  _prevState: ClarityActionState,
+  _prev: ClarityActionState,
   formData: FormData,
 ): Promise<ClarityActionState> {
   const id = formData.get("id");
@@ -45,7 +45,7 @@ export async function updateClarityAction(
     return { ok: false, error: "Missing clarity id." };
   }
 
-  const result = validateClarityInput({
+  const result = validateInput({
     title: formData.get("title"),
     body: formData.get("body"),
     module_code: formData.get("module_code"),
@@ -67,11 +67,7 @@ export async function updateClarityAction(
 
 export async function deleteClarityAction(formData: FormData): Promise<void> {
   const id = formData.get("id");
-  if (typeof id !== "string" || !id) {
-    // No-op on missing id. The Delete button in the feed always sends one;
-    // this branch only protects against a malformed request.
-    return;
-  }
+  if (typeof id !== "string" || !id) return;
   await deleteClarity(id);
   revalidatePath("/");
 }
