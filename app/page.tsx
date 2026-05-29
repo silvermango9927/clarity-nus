@@ -4,17 +4,14 @@ import { deleteClarityAction } from "@/app/actions";
 
 type SearchParams = Promise<{ module?: string | string[] }>;
 
-function firstString(v: string | string[] | undefined): string | undefined {
-  return Array.isArray(v) ? v[0] : v;
-}
+const first = (v: string | string[] | undefined) =>
+  Array.isArray(v) ? v[0] : v;
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString();
-}
+const fmtDate = (iso: string) => new Date(iso).toLocaleString();
 
-function excerpt(body: string, max = 180): string {
-  const trimmed = body.trim().replace(/\s+/g, " ");
-  return trimmed.length > max ? trimmed.slice(0, max) + "…" : trimmed;
+function excerpt(body: string, max = 180) {
+  const t = body.trim().replace(/\s+/g, " ");
+  return t.length > max ? t.slice(0, max) + "…" : t;
 }
 
 export default async function Home({
@@ -23,7 +20,7 @@ export default async function Home({
   searchParams: SearchParams;
 }) {
   const params = await searchParams;
-  const moduleFilter = firstString(params.module)?.trim() ?? "";
+  const moduleFilter = first(params.module)?.trim() ?? "";
   const clarities = await listClarities({ module: moduleFilter || undefined });
 
   return (
@@ -90,7 +87,7 @@ export default async function Home({
                 {excerpt(c.body)}
               </p>
               <div className="flex items-center justify-between text-xs text-muted pt-1 border-t border-rule">
-                <span>{formatDate(c.created_at)}</span>
+                <span>{fmtDate(c.created_at)}</span>
                 <div className="flex gap-3 items-center">
                   <Link
                     href={`/clarities/${c.id}/edit`}
