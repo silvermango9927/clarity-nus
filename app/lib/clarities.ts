@@ -16,12 +16,10 @@ export async function listClarities(options?: {
     .select(COLUMNS)
     .order("created_at", { ascending: false });
 
-  const moduleFilter = options?.module?.trim();
-  if (moduleFilter) {
-    // Case-insensitive contains match. Escape ilike wildcards so user input
-    // is treated as a literal substring.
-    const escaped = moduleFilter.replace(/[\\%_]/g, "\\$&");
-    query = query.ilike("module_code", `%${escaped}%`);
+  const mod = options?.module?.trim();
+  if (mod) {
+    const esc = mod.replace(/[\\%_]/g, "\\$&");
+    query = query.ilike("module_code", `%${esc}%`);
   }
 
   const { data, error } = await query;
@@ -30,9 +28,6 @@ export async function listClarities(options?: {
 }
 
 export async function getClarity(id: string): Promise<Clarity | null> {
-  // A non-UUID id can't possibly resolve to a row, and the Postgres uuid
-  // column rejects it with a 22P02 error. Treat it as "not found" so the
-  // edit page renders a clean 404 instead of a 500.
   if (!UUID_RE.test(id)) return null;
 
   const supabase = getServerSupabase();
