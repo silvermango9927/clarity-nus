@@ -36,6 +36,14 @@ yarn-error.log*
 # vercel
 .vercel
 
+# local notes
+CLAUDE.md
+AGENTS.md
+GEMINI.md
+.cursor/
+.aider*
+docs/superpowers/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
