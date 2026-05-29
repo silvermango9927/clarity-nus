@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import {
-  INITIAL_CLARITY_ACTION_STATE,
+  INITIAL_STATE,
   type Clarity,
   type ClarityActionState,
 } from "@/app/lib/clarity-types";
@@ -20,10 +20,7 @@ type Props = {
 };
 
 export function ClarityForm({ action, initial, submitLabel }: Props) {
-  const [state, formAction, pending] = useActionState(
-    action,
-    INITIAL_CLARITY_ACTION_STATE,
-  );
+  const [state, formAction, pending] = useActionState(action, INITIAL_STATE);
 
   const errorMessage =
     state && "ok" in state && state.ok === false ? state.error : null;
