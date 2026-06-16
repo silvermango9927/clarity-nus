@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import AuthStatus from "./components/AuthStatus";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,12 +34,15 @@ export default function RootLayout({
           <Link href="/" className="text-xl font-semibold">
             ClarityNUS
           </Link>
-          <Link
-            href="/clarities/new"
-            className="text-sm underline underline-offset-4"
-          >
-            New clarity
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/clarities/new"
+              className="text-sm underline underline-offset-4"
+            >
+              New clarity
+            </Link>
+            <AuthStatus />
+          </div>
         </header>
         <main className="flex-1 p-6">{children}</main>
       </body>
