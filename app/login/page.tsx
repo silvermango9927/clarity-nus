@@ -1,4 +1,5 @@
-import { login, signup } from './actions'
+import Link from 'next/link'
+import { login } from './actions'
 
 export default async function LoginPage({
   searchParams,
@@ -10,10 +11,8 @@ export default async function LoginPage({
   return (
     <div className="mx-auto flex max-w-sm flex-col gap-5 py-16">
       <div>
-        <h1 className="text-2xl font-semibold">Sign in to ClarityNUS</h1>
-        <p className="mt-1 text-sm text-foreground/60">
-          Log in, or create an account to post clarities.
-        </p>
+        <h1 className="text-2xl font-semibold">Log in to ClarityNUS</h1>
+        <p className="mt-1 text-sm text-foreground/60">Welcome back.</p>
       </div>
 
       {error && (
@@ -22,7 +21,7 @@ export default async function LoginPage({
         </p>
       )}
 
-      <form className="flex flex-col gap-4">
+      <form action={login} className="flex flex-col gap-4">
         <label className="flex flex-col gap-1.5 text-sm">
           Email
           <input
@@ -44,21 +43,20 @@ export default async function LoginPage({
           />
         </label>
 
-        <div className="mt-1 flex gap-3">
-          <button
-            formAction={login}
-            className="flex-1 rounded-md bg-foreground px-4 py-2 font-medium text-background transition-opacity hover:opacity-90"
-          >
-            Log in
-          </button>
-          <button
-            formAction={signup}
-            className="flex-1 rounded-md border border-foreground/30 px-4 py-2 font-medium text-foreground transition-colors hover:bg-foreground/5"
-          >
-            Sign up
-          </button>
-        </div>
+        <button
+          type="submit"
+          className="rounded-md bg-foreground px-4 py-2 font-medium text-background transition-opacity hover:opacity-90"
+        >
+          Log in
+        </button>
       </form>
+
+      <p className="text-sm text-foreground/60">
+        Don&apos;t have an account?{' '}
+        <Link href="/signup" className="font-medium text-foreground underline">
+          Sign up
+        </Link>
+      </p>
     </div>
   )
 }
