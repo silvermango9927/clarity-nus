@@ -48,3 +48,4 @@ docs/superpowers/
 *.tsbuildinfo
 next-env.d.ts
 docs/archive/
+.gstack/
