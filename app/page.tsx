@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { listClarities } from "@/app/lib/clarities";
 import { deleteClarityAction } from "@/app/actions";
+import { Markdown } from "@/app/components/Markdown";
 
 type SearchParams = Promise<{ module?: string | string[] }>;
 
@@ -8,11 +9,6 @@ const first = (v: string | string[] | undefined) =>
   Array.isArray(v) ? v[0] : v;
 
 const fmtDate = (iso: string) => new Date(iso).toLocaleString();
-
-function excerpt(body: string, max = 180) {
-  const t = body.trim().replace(/\s+/g, " ");
-  return t.length > max ? t.slice(0, max) + "…" : t;
-}
 
 export default async function Home({
   searchParams,
@@ -75,18 +71,29 @@ export default async function Home({
           {clarities.map((c) => (
             <li
               key={c.id}
-              className="border border-rule rounded-lg p-5 flex flex-col gap-3 bg-white/40"
+              className="group relative isolate border border-rule rounded-lg p-5 flex flex-col gap-3 bg-white/40"
             >
               <div className="flex items-baseline justify-between gap-3">
-                <h2 className="font-serif text-xl leading-tight">{c.title}</h2>
+                <h2 className="font-serif text-xl leading-tight group-hover:text-accent">
+                  {/* Stretched link: the ::after overlay (z-[1], above the
+                      relatively-positioned preview) makes the whole card
+                      clickable while keeping the body's Markdown links out of a
+                      nested <a> (which is invalid HTML / a hydration error). */}
+                  <Link
+                    href={`/clarities/${c.id}`}
+                    className="after:absolute after:inset-0 after:z-1 after:content-['']"
+                  >
+                    {c.title}
+                  </Link>
+                </h2>
                 <span className="shrink-0 text-xs font-mono px-2 py-0.5 rounded-full bg-badge text-badge-fg tracking-wide">
                   {c.module_code}
                 </span>
               </div>
-              <p className="text-sm text-(--foreground)/80 leading-relaxed">
-                {excerpt(c.body)}
-              </p>
-              <div className="flex items-center justify-between text-xs text-muted pt-1 border-t border-rule">
+              <div className="clarity-clamp [--card-bg:#faf7f2]">
+                <Markdown source={c.body} />
+              </div>
+              <div className="relative z-10 flex items-center justify-between text-xs text-muted pt-1 border-t border-rule">
                 <span>{fmtDate(c.created_at)}</span>
                 <div className="flex gap-3 items-center">
                   <Link

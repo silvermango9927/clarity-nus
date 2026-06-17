@@ -71,3 +71,16 @@ export async function deleteClarityAction(formData: FormData): Promise<void> {
   await deleteClarity(id);
   revalidatePath("/");
 }
+
+// Detail-page delete: the row is gone, so we cannot stay on /clarities/[id].
+// Delete, refresh the feed, then send the user back home.
+export async function deleteClarityAndGoHomeAction(
+  formData: FormData,
+): Promise<void> {
+  const id = formData.get("id");
+  if (typeof id === "string" && id) {
+    await deleteClarity(id);
+    revalidatePath("/");
+  }
+  redirect("/");
+}
