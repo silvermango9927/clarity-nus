@@ -5,6 +5,8 @@ import type { Clarity, ClarityInput } from "@/app/lib/clarity-types";
 const TABLE = "clarities";
 const COLUMNS = "id, title, body, module_code, created_at, updated_at";
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function listClarities(options?: {
   module?: string;
 }): Promise<Clarity[]> {
@@ -14,12 +16,10 @@ export async function listClarities(options?: {
     .select(COLUMNS)
     .order("created_at", { ascending: false });
 
-  const moduleFilter = options?.module?.trim();
-  if (moduleFilter) {
-    // Case-insensitive contains match. Escape ilike wildcards so user input
-    // is treated as a literal substring.
-    const escaped = moduleFilter.replace(/[\\%_]/g, "\\$&");
-    query = query.ilike("module_code", `%${escaped}%`);
+  const mod = options?.module?.trim();
+  if (mod) {
+    const esc = mod.replace(/[\\%_]/g, "\\$&");
+    query = query.ilike("module_code", `%${esc}%`);
   }
 
   const { data, error } = await query;
@@ -28,6 +28,8 @@ export async function listClarities(options?: {
 }
 
 export async function getClarity(id: string): Promise<Clarity | null> {
+  if (!UUID_RE.test(id)) return null;
+
   const supabase = getServerSupabase();
   const { data, error } = await supabase
     .from(TABLE)

@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import {
-  INITIAL_CLARITY_ACTION_STATE,
+  INITIAL_STATE,
   type Clarity,
   type ClarityActionState,
 } from "@/app/lib/clarity-types";
@@ -20,10 +20,7 @@ type Props = {
 };
 
 export function ClarityForm({ action, initial, submitLabel }: Props) {
-  const [state, formAction, pending] = useActionState(
-    action,
-    INITIAL_CLARITY_ACTION_STATE,
-  );
+  const [state, formAction, pending] = useActionState(action, INITIAL_STATE);
 
   const errorMessage =
     state && "ok" in state && state.ok === false ? state.error : null;
@@ -38,7 +35,7 @@ export function ClarityForm({ action, initial, submitLabel }: Props) {
           name="title"
           required
           defaultValue={initial?.title ?? ""}
-          className="border rounded px-3 py-2"
+          className="border border-rule rounded px-3 py-2 bg-transparent focus:outline-none focus:border-accent"
         />
       </label>
 
@@ -49,7 +46,7 @@ export function ClarityForm({ action, initial, submitLabel }: Props) {
           required
           placeholder="e.g. CS2030S"
           defaultValue={initial?.module_code ?? ""}
-          className="border rounded px-3 py-2"
+          className="border border-rule rounded px-3 py-2 bg-transparent focus:outline-none focus:border-accent"
         />
       </label>
 
@@ -60,7 +57,7 @@ export function ClarityForm({ action, initial, submitLabel }: Props) {
           required
           rows={10}
           defaultValue={initial?.body ?? ""}
-          className="border rounded px-3 py-2 font-mono text-sm"
+          className="border border-rule rounded px-3 py-2 bg-transparent focus:outline-none focus:border-accent font-mono text-sm"
         />
       </label>
 
@@ -74,7 +71,7 @@ export function ClarityForm({ action, initial, submitLabel }: Props) {
         <button
           type="submit"
           disabled={pending}
-          className="border rounded px-4 py-2 font-medium disabled:opacity-50"
+          className="border border-foreground rounded px-4 py-2 font-medium hover:bg-foreground hover:text-background disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-foreground"
         >
           {pending ? "Saving…" : submitLabel}
         </button>
