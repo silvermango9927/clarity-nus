@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Geist, Geist_Mono, Fraunces } from "next/font/google";
 import "./globals.css";
+import "katex/dist/katex.min.css";
 import AuthStatus from "./components/AuthStatus";
 
 const geistSans = Geist({
