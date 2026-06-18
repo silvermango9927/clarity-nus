@@ -1,6 +1,10 @@
 import "server-only";
 import { getServerSupabase } from "@/app/lib/supabase-server";
-import type { Clarity, ClarityInput } from "@/app/lib/clarity-types";
+import type {
+  Clarity,
+  ClarityInput,
+  ClarityListItem,
+} from "@/app/lib/clarity-types";
 
 const TABLE = "clarities";
 const COLUMNS = "id, title, body, module_code, created_at, updated_at";
@@ -9,11 +13,11 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 
 export async function listClarities(options?: {
   module?: string;
-}): Promise<Clarity[]> {
+}): Promise<ClarityListItem[]> {
   const supabase = getServerSupabase();
   let query = supabase
     .from(TABLE)
-    .select(COLUMNS)
+    .select(`${COLUMNS}, clarity_attachments(count)`)
     .order("created_at", { ascending: false });
 
   const mod = options?.module?.trim();
@@ -24,7 +28,16 @@ export async function listClarities(options?: {
 
   const { data, error } = await query;
   if (error) throw new Error(`listClarities failed: ${error.message}`);
-  return (data ?? []) as Clarity[];
+
+  return (data ?? []).map((row) => {
+    const { clarity_attachments, ...clarity } = row as Clarity & {
+      clarity_attachments: { count: number }[];
+    };
+    return {
+      ...clarity,
+      attachment_count: clarity_attachments?.[0]?.count ?? 0,
+    };
+  });
 }
 
 export async function getClarity(id: string): Promise<Clarity | null> {
