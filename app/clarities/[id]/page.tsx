@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getClarity } from "@/app/lib/clarities";
+import { listAttachments } from "@/app/lib/attachments";
 import { Markdown } from "@/app/components/Markdown";
+import { Attachments } from "@/app/components/Attachments";
 import { deleteClarityAndGoHomeAction } from "@/app/actions";
 
 type Params = Promise<{ id: string }>;
@@ -22,6 +24,8 @@ export default async function ClarityDetailPage({
   const clarity = await getClarity(id);
   if (!clarity) notFound();
 
+  const attachments = await listAttachments(clarity.id);
+
   return (
     <article className="flex flex-col gap-5 max-w-3xl">
       <Link
@@ -39,6 +43,8 @@ export default async function ClarityDetailPage({
       </div>
 
       <Markdown source={clarity.body} />
+
+      <Attachments attachments={attachments} />
 
       <div className="flex items-center justify-between text-xs text-muted pt-3 border-t border-rule">
         <span>

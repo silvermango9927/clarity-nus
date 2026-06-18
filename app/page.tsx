@@ -94,7 +94,16 @@ export default async function Home({
                 <Markdown source={c.body} />
               </div>
               <div className="relative z-10 flex items-center justify-between text-xs text-muted pt-1 border-t border-rule">
-                <span>{fmtDate(c.created_at)}</span>
+                <span className="flex items-center gap-2">
+                  {fmtDate(c.created_at)}
+                  {c.attachment_count > 0 && (
+                    <span
+                      title={`${c.attachment_count} attachment${c.attachment_count === 1 ? "" : "s"}`}
+                    >
+                      📎 {c.attachment_count}
+                    </span>
+                  )}
+                </span>
                 <div className="flex gap-3 items-center">
                   <Link
                     href={`/clarities/${c.id}/edit`}

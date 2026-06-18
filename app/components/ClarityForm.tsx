@@ -6,8 +6,10 @@ import {
   INITIAL_STATE,
   type Clarity,
   type ClarityActionState,
+  type ClarityAttachment,
 } from "@/app/lib/clarity-types";
 import { Markdown } from "@/app/components/Markdown";
+import { AttachmentDropzone } from "@/app/components/AttachmentDropzone";
 
 type FormAction = (
   prevState: ClarityActionState,
@@ -18,9 +20,15 @@ type Props = {
   action: FormAction;
   initial?: Clarity;
   submitLabel: string;
+  existingAttachments?: ClarityAttachment[];
 };
 
-export function ClarityForm({ action, initial, submitLabel }: Props) {
+export function ClarityForm({
+  action,
+  initial,
+  submitLabel,
+  existingAttachments,
+}: Props) {
   const [state, formAction, pending] = useActionState(action, INITIAL_STATE);
   const [body, setBody] = useState(initial?.body ?? "");
   // Defer the preview render so KaTeX/highlight work doesn't run on every
@@ -85,6 +93,8 @@ export function ClarityForm({ action, initial, submitLabel }: Props) {
           </div>
         </div>
       </div>
+
+      <AttachmentDropzone existing={existingAttachments} />
 
       {errorMessage && (
         <p aria-live="polite" className="text-sm text-red-600">

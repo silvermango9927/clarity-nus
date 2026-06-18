@@ -37,7 +37,6 @@ yarn-error.log*
 .vercel
 
 # local notes
-CLAUDE.md
 AGENTS.md
 GEMINI.md
 .cursor/
