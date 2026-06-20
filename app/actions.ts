@@ -11,11 +11,14 @@ import {
   validateClarityInput,
   type ClarityActionState,
 } from "@/app/lib/clarity-types";
+import { requireUser } from "@/app/lib/require-user";
 
 export async function createClarityAction(
   _prevState: ClarityActionState,
   formData: FormData,
 ): Promise<ClarityActionState> {
+  await requireUser();
+
   const result = validateClarityInput({
     title: formData.get("title"),
     body: formData.get("body"),
@@ -40,6 +43,8 @@ export async function updateClarityAction(
   _prevState: ClarityActionState,
   formData: FormData,
 ): Promise<ClarityActionState> {
+  await requireUser();
+
   const id = formData.get("id");
   if (typeof id !== "string" || !id) {
     return { ok: false, error: "Missing clarity id." };
@@ -66,6 +71,8 @@ export async function updateClarityAction(
 }
 
 export async function deleteClarityAction(formData: FormData): Promise<void> {
+  await requireUser();
+
   const id = formData.get("id");
   if (typeof id !== "string" || !id) {
     // No-op on missing id. The Delete button in the feed always sends one;
