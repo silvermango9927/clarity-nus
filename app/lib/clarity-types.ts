@@ -46,7 +46,7 @@ export const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024; // 10 MB
 // The allowlist: MIME type -> { kind, ext }. Anything else is rejected on both
 // the client and the server. The stored object name uses `ext`, never the
 // user's filename.
-export const ALLOWED_ATTACHMENT_TYPES: Record
+export const ALLOWED_ATTACHMENT_TYPES: Record<
   string,
   { kind: AttachmentKind; ext: string }
 > = {
