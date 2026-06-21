@@ -19,6 +19,7 @@ import {
   validateInput,
   type ClarityActionState,
 } from "@/app/lib/clarity-types";
+import { requireUser } from "@/app/lib/require-user";
 
 // Real (non-empty) File entries from the dropzone's hidden input.
 function pickFiles(formData: FormData): File[] {
@@ -49,6 +50,8 @@ export async function createClarityAction(
   _prev: ClarityActionState,
   formData: FormData,
 ): Promise<ClarityActionState> {
+  await requireUser();
+
   const result = validateInput({
     title: formData.get("title"),
     body: formData.get("body"),
@@ -86,6 +89,8 @@ export async function updateClarityAction(
   _prev: ClarityActionState,
   formData: FormData,
 ): Promise<ClarityActionState> {
+  await requireUser();
+
   const id = formData.get("id");
   if (typeof id !== "string" || !id) {
     return { ok: false, error: "Missing clarity id." };
@@ -132,6 +137,8 @@ export async function updateClarityAction(
 }
 
 export async function deleteClarityAction(formData: FormData): Promise<void> {
+  await requireUser();
+
   const id = formData.get("id");
   if (typeof id !== "string" || !id) return;
   // Remove the Storage objects (rows cascade on the clarity delete).
@@ -150,6 +157,8 @@ export async function deleteClarityAction(formData: FormData): Promise<void> {
 export async function deleteClarityAndGoHomeAction(
   formData: FormData,
 ): Promise<void> {
+  await requireUser();
+
   const id = formData.get("id");
   if (typeof id === "string" && id) {
     try {
