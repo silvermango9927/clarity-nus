@@ -1,26 +1,269 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f7f2ea;
+  --foreground: #1a1a1a;
+  --muted: #6b6357;
+  --rule: #d9cfbf;
+  --accent: #e55a48;
+  --badge: #2d3f8a;
+  --badge-fg: #f7f2ea;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-rule: var(--rule);
+  --color-accent: var(--accent);
+  --color-badge: var(--badge);
+  --color-badge-fg: var(--badge-fg);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-serif: var(--font-fraunces);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+/* ── Rendered Markdown (F3) ───────────────────────────────────────────────
+   Scoped prose styling for clarity bodies, tuned to the poster palette.
+   Used by app/components/Markdown.tsx on every surface. */
+
+.clarity-prose {
+  color: var(--foreground);
+  line-height: 1.65;
+  font-size: 0.975rem;
+  overflow-wrap: anywhere;
+}
+
+.clarity-prose > :first-child {
+  margin-top: 0;
+}
+.clarity-prose > :last-child {
+  margin-bottom: 0;
+}
+
+.clarity-prose h1,
+.clarity-prose h2,
+.clarity-prose h3,
+.clarity-prose h4,
+.clarity-prose h5,
+.clarity-prose h6 {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-weight: 600;
+  line-height: 1.2;
+  margin: 1.6em 0 0.5em;
+}
+.clarity-prose h1 {
+  font-size: 1.65rem;
+}
+.clarity-prose h2 {
+  font-size: 1.4rem;
+}
+.clarity-prose h3 {
+  font-size: 1.2rem;
+}
+.clarity-prose h4 {
+  font-size: 1.05rem;
+}
+.clarity-prose h5,
+.clarity-prose h6 {
+  font-size: 1rem;
+}
+
+.clarity-prose p {
+  margin: 0.75em 0;
+}
+
+.clarity-prose a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.clarity-prose strong {
+  font-weight: 600;
+}
+
+.clarity-prose ul,
+.clarity-prose ol {
+  margin: 0.75em 0;
+  padding-left: 1.5em;
+}
+.clarity-prose ul {
+  list-style: disc;
+}
+.clarity-prose ol {
+  list-style: decimal;
+}
+.clarity-prose li {
+  margin: 0.3em 0;
+}
+.clarity-prose li > ul,
+.clarity-prose li > ol {
+  margin: 0.3em 0;
+}
+
+/* GFM task lists */
+.clarity-prose li:has(> input[type="checkbox"]) {
+  list-style: none;
+  margin-left: -1.2em;
+}
+.clarity-prose input[type="checkbox"] {
+  margin-right: 0.5em;
+  accent-color: var(--accent);
+}
+
+.clarity-prose blockquote {
+  margin: 1em 0;
+  padding: 0.25em 1em;
+  border-left: 3px solid var(--rule);
+  color: var(--muted);
+  font-style: italic;
+}
+
+.clarity-prose hr {
+  margin: 1.75em 0;
+  border: 0;
+  border-top: 1px solid var(--rule);
+}
+
+.clarity-prose img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.375rem;
+}
+
+/* Tables (GFM) */
+.clarity-prose table {
+  width: 100%;
+  margin: 1em 0;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.clarity-prose th,
+.clarity-prose td {
+  border: 1px solid var(--rule);
+  padding: 0.4em 0.65em;
+  text-align: left;
+}
+.clarity-prose th {
+  background: color-mix(in srgb, var(--rule) 35%, transparent);
+  font-weight: 600;
+}
+
+/* Inline code */
+.clarity-prose :not(pre) > code {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.85em;
+  background: color-mix(in srgb, var(--rule) 45%, transparent);
+  padding: 0.12em 0.38em;
+  border-radius: 0.3rem;
+}
+
+/* Code blocks */
+.clarity-prose pre {
+  margin: 1em 0;
+  padding: 0.9rem 1rem;
+  background: #fbf7f0;
+  border: 1px solid var(--rule);
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+.clarity-prose pre code {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  font-size: inherit;
+}
+
+/* KaTeX: keep wide display math scrollable instead of overflowing the card */
+.clarity-prose .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.25rem 0;
+  margin: 1em 0;
+}
+
+/* ── highlight.js token theme (light, warm-palette tuned) ─────────────────
+   rehype-highlight emits `hljs-*` classes; scoped under .clarity-prose. */
+
+.clarity-prose .hljs {
+  color: var(--foreground);
+  background: none;
+}
+.clarity-prose .hljs-comment,
+.clarity-prose .hljs-quote {
+  color: #9a907f;
+  font-style: italic;
+}
+.clarity-prose .hljs-keyword,
+.clarity-prose .hljs-selector-tag,
+.clarity-prose .hljs-doctag,
+.clarity-prose .hljs-formula {
+  color: #2d3f8a;
+}
+.clarity-prose .hljs-string,
+.clarity-prose .hljs-regexp,
+.clarity-prose .hljs-addition {
+  color: #4f7a28;
+}
+.clarity-prose .hljs-number,
+.clarity-prose .hljs-literal,
+.clarity-prose .hljs-built_in,
+.clarity-prose .hljs-type,
+.clarity-prose .hljs-class .hljs-title {
+  color: #b5532e;
+}
+.clarity-prose .hljs-title,
+.clarity-prose .hljs-title.function_,
+.clarity-prose .hljs-section {
+  color: #1f6f6f;
+}
+.clarity-prose .hljs-attr,
+.clarity-prose .hljs-attribute,
+.clarity-prose .hljs-property,
+.clarity-prose .hljs-variable,
+.clarity-prose .hljs-template-variable,
+.clarity-prose .hljs-name {
+  color: #2d3f8a;
+}
+.clarity-prose .hljs-symbol,
+.clarity-prose .hljs-bullet,
+.clarity-prose .hljs-link,
+.clarity-prose .hljs-meta,
+.clarity-prose .hljs-deletion {
+  color: var(--accent);
+}
+.clarity-prose .hljs-emphasis {
+  font-style: italic;
+}
+.clarity-prose .hljs-strong {
+  font-weight: 600;
+}
+
+/* ── Feed clamp (F3) ──────────────────────────────────────────────────────
+   Caps the rendered preview height with a fade-out into the page bg. */
+
+.clarity-clamp {
+  position: relative;
+  max-height: 7.5em;
+  overflow: hidden;
+}
+.clarity-clamp::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2.5em;
+  background: linear-gradient(to bottom, transparent, var(--card-bg, var(--background)));
+  pointer-events: none;
 }

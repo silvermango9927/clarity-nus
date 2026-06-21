@@ -1,21 +1,14 @@
 import Link from "next/link";
 import { listClarities } from "@/app/lib/clarities";
 import { deleteClarityAction } from "@/app/actions";
+import { Markdown } from "@/app/components/Markdown";
 
 type SearchParams = Promise<{ module?: string | string[] }>;
 
-function firstString(v: string | string[] | undefined): string | undefined {
-  return Array.isArray(v) ? v[0] : v;
-}
+const first = (v: string | string[] | undefined) =>
+  Array.isArray(v) ? v[0] : v;
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString();
-}
-
-function excerpt(body: string, max = 180): string {
-  const trimmed = body.trim().replace(/\s+/g, " ");
-  return trimmed.length > max ? trimmed.slice(0, max) + "…" : trimmed;
-}
+const fmtDate = (iso: string) => new Date(iso).toLocaleString();
 
 export default async function Home({
   searchParams,
@@ -23,33 +16,41 @@ export default async function Home({
   searchParams: SearchParams;
 }) {
   const params = await searchParams;
-  const moduleFilter = firstString(params.module)?.trim() ?? "";
+  const moduleFilter = first(params.module)?.trim() ?? "";
   const clarities = await listClarities({ module: moduleFilter || undefined });
 
   return (
-    <div className="flex flex-col gap-6 max-w-3xl">
+    <div className="flex flex-col gap-8 max-w-3xl">
       <form method="get" className="flex gap-2 items-end">
         <label className="flex flex-col gap-1 flex-1">
-          <span className="text-sm font-medium">Filter by module code</span>
+          <span className="text-xs uppercase tracking-wider text-muted">
+            Filter by module code
+          </span>
           <input
             name="module"
             defaultValue={moduleFilter}
             placeholder="e.g. CS2030S"
-            className="border rounded px-3 py-2"
+            className="border border-rule rounded px-3 py-2 bg-transparent focus:outline-none focus:border-accent"
           />
         </label>
-        <button type="submit" className="border rounded px-4 py-2">
+        <button
+          type="submit"
+          className="border border-foreground rounded px-4 py-2 font-medium hover:bg-foreground hover:text-background"
+        >
           Filter
         </button>
         {moduleFilter && (
-          <Link href="/" className="text-sm underline underline-offset-4 py-2">
+          <Link
+            href="/"
+            className="text-sm underline underline-offset-4 py-2 text-muted"
+          >
             Clear
           </Link>
         )}
       </form>
 
       {clarities.length === 0 ? (
-        <p className="text-gray-600">
+        <p className="text-muted">
           {moduleFilter ? (
             `No clarities found for "${moduleFilter}".`
           ) : (
@@ -57,7 +58,7 @@ export default async function Home({
               No clarities yet.{" "}
               <Link
                 href="/clarities/new"
-                className="underline underline-offset-4"
+                className="underline underline-offset-4 decoration-accent decoration-2 text-foreground"
               >
                 Write the first one
               </Link>
@@ -68,16 +69,41 @@ export default async function Home({
       ) : (
         <ul className="flex flex-col gap-4">
           {clarities.map((c) => (
-            <li key={c.id} className="border rounded p-4 flex flex-col gap-2">
+            <li
+              key={c.id}
+              className="group relative isolate border border-rule rounded-lg p-5 flex flex-col gap-3 bg-white/40"
+            >
               <div className="flex items-baseline justify-between gap-3">
-                <h2 className="text-lg font-semibold">{c.title}</h2>
-                <span className="text-xs font-mono text-gray-500">
+                <h2 className="font-serif text-xl leading-tight group-hover:text-accent">
+                  {/* Stretched link: the ::after overlay (z-[1], above the
+                      relatively-positioned preview) makes the whole card
+                      clickable while keeping the body's Markdown links out of a
+                      nested <a> (which is invalid HTML / a hydration error). */}
+                  <Link
+                    href={`/clarities/${c.id}`}
+                    className="after:absolute after:inset-0 after:z-1 after:content-['']"
+                  >
+                    {c.title}
+                  </Link>
+                </h2>
+                <span className="shrink-0 text-xs font-mono px-2 py-0.5 rounded-full bg-badge text-badge-fg tracking-wide">
                   {c.module_code}
                 </span>
               </div>
-              <p className="text-sm text-gray-700">{excerpt(c.body)}</p>
-              <div className="flex items-center justify-between text-xs text-gray-500">
-                <span>{formatDate(c.created_at)}</span>
+              <div className="clarity-clamp [--card-bg:#faf7f2]">
+                <Markdown source={c.body} />
+              </div>
+              <div className="relative z-10 flex items-center justify-between text-xs text-muted pt-1 border-t border-rule">
+                <span className="flex items-center gap-2">
+                  {fmtDate(c.created_at)}
+                  {c.attachment_count > 0 && (
+                    <span
+                      title={`${c.attachment_count} attachment${c.attachment_count === 1 ? "" : "s"}`}
+                    >
+                      📎 {c.attachment_count}
+                    </span>
+                  )}
+                </span>
                 <div className="flex gap-3 items-center">
                   <Link
                     href={`/clarities/${c.id}/edit`}
@@ -89,7 +115,7 @@ export default async function Home({
                     <input type="hidden" name="id" value={c.id} />
                     <button
                       type="submit"
-                      className="underline underline-offset-4 text-red-600"
+                      className="underline underline-offset-4 text-accent"
                     >
                       Delete
                     </button>
