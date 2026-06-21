@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { listClarities } from "@/app/lib/clarities";
+import { createClient } from "@/app/lib/auth-server";
 import { deleteClarityAction } from "@/app/actions";
 import { Markdown } from "@/app/components/Markdown";
+import type { Author } from "@/app/lib/clarity-types";
 
 type SearchParams = Promise<{ module?: string | string[] }>;
 
@@ -9,6 +11,12 @@ const first = (v: string | string[] | undefined) =>
   Array.isArray(v) ? v[0] : v;
 
 const fmtDate = (iso: string) => new Date(iso).toLocaleString();
+
+const authorLabel = (a: Author | null) => {
+  if (!a) return "Unknown author";
+  const tail = [a.year ? `Y${a.year}` : null, a.major].filter(Boolean).join(" ");
+  return tail ? `@${a.username} · ${tail}` : `@${a.username}`;
+};
 
 export default async function Home({
   searchParams,
@@ -18,6 +26,13 @@ export default async function Home({
   const params = await searchParams;
   const moduleFilter = first(params.module)?.trim() ?? "";
   const clarities = await listClarities({ module: moduleFilter || undefined });
+
+  // Current user (no redirect — the feed is public). Used to gate Edit/Delete.
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const currentUserId = user?.id ?? null;
 
   return (
     <div className="flex flex-col gap-8 max-w-3xl">
@@ -75,10 +90,9 @@ export default async function Home({
             >
               <div className="flex items-baseline justify-between gap-3">
                 <h2 className="font-serif text-xl leading-tight group-hover:text-accent">
-                  {/* Stretched link: the ::after overlay (z-[1], above the
-                      relatively-positioned preview) makes the whole card
-                      clickable while keeping the body's Markdown links out of a
-                      nested <a> (which is invalid HTML / a hydration error). */}
+                  {/* Stretched link: the ::after overlay makes the whole card
+                      clickable while keeping body Markdown links out of a nested
+                      <a> (invalid HTML / hydration error). */}
                   <Link
                     href={`/clarities/${c.id}`}
                     className="after:absolute after:inset-0 after:z-1 after:content-['']"
@@ -95,7 +109,9 @@ export default async function Home({
               </div>
               <div className="relative z-10 flex items-center justify-between text-xs text-muted pt-1 border-t border-rule">
                 <span className="flex items-center gap-2">
-                  {fmtDate(c.created_at)}
+                  <span>{authorLabel(c.author)}</span>
+                  <span aria-hidden>·</span>
+                  <span>{fmtDate(c.created_at)}</span>
                   {c.attachment_count > 0 && (
                     <span
                       title={`${c.attachment_count} attachment${c.attachment_count === 1 ? "" : "s"}`}
@@ -104,23 +120,25 @@ export default async function Home({
                     </span>
                   )}
                 </span>
-                <div className="flex gap-3 items-center">
-                  <Link
-                    href={`/clarities/${c.id}/edit`}
-                    className="underline underline-offset-4"
-                  >
-                    Edit
-                  </Link>
-                  <form action={deleteClarityAction}>
-                    <input type="hidden" name="id" value={c.id} />
-                    <button
-                      type="submit"
-                      className="underline underline-offset-4 text-accent"
+                {c.author_id === currentUserId && (
+                  <div className="flex gap-3 items-center">
+                    <Link
+                      href={`/clarities/${c.id}/edit`}
+                      className="underline underline-offset-4"
                     >
-                      Delete
-                    </button>
-                  </form>
-                </div>
+                      Edit
+                    </Link>
+                    <form action={deleteClarityAction}>
+                      <input type="hidden" name="id" value={c.id} />
+                      <button
+                        type="submit"
+                        className="underline underline-offset-4 text-accent"
+                      >
+                        Delete
+                      </button>
+                    </form>
+                  </div>
+                )}
               </div>
             </li>
           ))}

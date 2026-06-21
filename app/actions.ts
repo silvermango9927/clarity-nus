@@ -2,10 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { requireUser } from "@/app/lib/require-user";
 import {
   createClarity,
   updateClarity,
   deleteClarity,
+  getClarityAuthor,
 } from "@/app/lib/clarities";
 import {
   deleteAttachments,
@@ -20,14 +22,12 @@ import {
   type ClarityActionState,
 } from "@/app/lib/clarity-types";
 
-// Real (non-empty) File entries from the dropzone's hidden input.
 function pickFiles(formData: FormData): File[] {
   return formData
     .getAll("attachments")
     .filter((v): v is File => v instanceof File && v.size > 0);
 }
 
-// Server-side re-validation (never trust the client). Returns the first error.
 function firstFileError(files: File[]): string | null {
   for (const file of files) {
     const check = checkAttachmentFile(file);
@@ -49,6 +49,8 @@ export async function createClarityAction(
   _prev: ClarityActionState,
   formData: FormData,
 ): Promise<ClarityActionState> {
+  const user = await requireUser();
+
   const result = validateInput({
     title: formData.get("title"),
     body: formData.get("body"),
@@ -65,7 +67,7 @@ export async function createClarityAction(
 
   let clarity;
   try {
-    clarity = await createClarity(result.value);
+    clarity = await createClarity(result.value, user.id);
   } catch (e) {
     return {
       ok: false,
@@ -73,7 +75,6 @@ export async function createClarityAction(
     };
   }
 
-  // Best-effort uploads; strict validation above makes runtime failures rare.
   for (const file of files) {
     await uploadClarityAttachment(clarity.id, file);
   }
@@ -86,9 +87,15 @@ export async function updateClarityAction(
   _prev: ClarityActionState,
   formData: FormData,
 ): Promise<ClarityActionState> {
+  const user = await requireUser();
+
   const id = formData.get("id");
   if (typeof id !== "string" || !id) {
     return { ok: false, error: "Missing clarity id." };
+  }
+
+  if ((await getClarityAuthor(id)) !== user.id) {
+    return { ok: false, error: "You can only edit your own clarities." };
   }
 
   const result = validateInput({
@@ -102,7 +109,6 @@ export async function updateClarityAction(
   const fileError = firstFileError(files);
   if (fileError) return { ok: false, error: fileError };
 
-  // Enforce the total cap against what survives the requested removals.
   const removedIds = parseRemovedIds(formData);
   const existing = await listAttachments(id);
   const ownIds = new Set(existing.map((a) => a.id));
@@ -132,10 +138,13 @@ export async function updateClarityAction(
 }
 
 export async function deleteClarityAction(formData: FormData): Promise<void> {
+  const user = await requireUser();
+
   const id = formData.get("id");
   if (typeof id !== "string" || !id) return;
-  // Remove the Storage objects (rows cascade on the clarity delete).
-  // Best-effort: a cleanup failure must not block deleting the clarity.
+
+  if ((await getClarityAuthor(id)) !== user.id) return;
+
   try {
     await purgeAttachmentObjects(id);
   } catch (e) {
@@ -145,13 +154,13 @@ export async function deleteClarityAction(formData: FormData): Promise<void> {
   revalidatePath("/");
 }
 
-// Detail-page delete: the row is gone, so we cannot stay on /clarities/[id].
-// Delete, refresh the feed, then send the user back home.
 export async function deleteClarityAndGoHomeAction(
   formData: FormData,
 ): Promise<void> {
+  const user = await requireUser();
+
   const id = formData.get("id");
-  if (typeof id === "string" && id) {
+  if (typeof id === "string" && id && (await getClarityAuthor(id)) === user.id) {
     try {
       await purgeAttachmentObjects(id);
     } catch (e) {
