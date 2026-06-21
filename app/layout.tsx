@@ -37,29 +37,22 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <header className="border-b border-rule px-6 py-5 flex items-end justify-between gap-6">
-          <div className="flex flex-col">
-            <Link
-              href="/"
-              className="font-serif text-3xl leading-none tracking-tight"
+        <header className="border-b border-rule px-6 py-4 flex items-center justify-between gap-6">
+          <Link href="/" className="flex items-center gap-3">
+            <span
+              aria-hidden
+              className="grid place-items-center w-8 h-8 rounded-lg bg-foreground text-background font-serif text-base leading-none"
             >
-              Clarity
-              <span className="relative">
-                NUS
-                <span
-                  aria-hidden
-                  className="absolute left-0 right-0 -bottom-1 h-[3px] bg-accent rounded-full"
-                />
-              </span>
-            </Link>
-            <p className="mt-1 text-sm italic font-serif text-muted">
-              Bite-sized clarity, crowd-sourced understanding.
-            </p>
-          </div>
-          <div className="flex items-center gap-4">
+              C
+            </span>
+            <span className="font-serif text-2xl leading-none tracking-tight text-foreground">
+              ClarityNUS
+            </span>
+          </Link>
+          <div className="flex items-center gap-3">
             <Link
               href="/clarities/new"
-              className="text-sm font-medium underline underline-offset-4 decoration-accent decoration-2 hover:text-accent"
+              className="rounded-lg bg-foreground text-background px-3.5 py-2 text-sm font-medium hover:opacity-90 transition-opacity"
             >
               New clarity
             </Link>

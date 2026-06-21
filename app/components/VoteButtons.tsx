@@ -9,30 +9,33 @@ export function VoteButtons({
   score: number;
   userVote: -1 | 0 | 1;
 }) {
-  const base = "px-1 leading-none text-sm transition-colors hover:text-foreground";
   return (
-    <div className="flex items-center gap-1">
-      <form action={voteAction}>
+    <div className="flex items-center gap-1.5 rounded-full bg-vote-bg px-2.5 py-1">
+      <form action={voteAction} className="flex">
         <input type="hidden" name="clarity_id" value={clarityId} />
         <input type="hidden" name="vote" value="1" />
         <button
           type="submit"
           aria-label="Upvote"
-          className={`${base} ${userVote === 1 ? "text-accent" : "text-muted"}`}
+          className={`text-xs leading-none transition-colors hover:text-accent ${
+            userVote === 1 ? "text-accent" : "text-muted"
+          }`}
         >
           ▲
         </button>
       </form>
-      <span className="min-w-[1.5rem] text-center font-mono text-foreground">
+      <span className="min-w-[1.25rem] text-center font-mono text-xs font-medium text-foreground">
         {score}
       </span>
-      <form action={voteAction}>
+      <form action={voteAction} className="flex">
         <input type="hidden" name="clarity_id" value={clarityId} />
         <input type="hidden" name="vote" value="-1" />
         <button
           type="submit"
           aria-label="Downvote"
-          className={`${base} ${userVote === -1 ? "text-accent" : "text-muted"}`}
+          className={`text-xs leading-none transition-colors hover:text-accent ${
+            userVote === -1 ? "text-accent" : "text-muted"
+          }`}
         >
           ▼
         </button>
