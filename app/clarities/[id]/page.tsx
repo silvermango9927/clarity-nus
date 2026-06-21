@@ -2,13 +2,21 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getClarity } from "@/app/lib/clarities";
 import { listAttachments } from "@/app/lib/attachments";
+import { createClient } from "@/app/lib/auth-server";
 import { Markdown } from "@/app/components/Markdown";
 import { Attachments } from "@/app/components/Attachments";
 import { deleteClarityAndGoHomeAction } from "@/app/actions";
+import type { Author } from "@/app/lib/clarity-types";
 
 type Params = Promise<{ id: string }>;
 
 const fmtDate = (iso: string) => new Date(iso).toLocaleString();
+
+const authorLabel = (a: Author | null) => {
+  if (!a) return "Unknown author";
+  const tail = [a.year ? `Y${a.year}` : null, a.major].filter(Boolean).join(" ");
+  return tail ? `@${a.username} · ${tail}` : `@${a.username}`;
+};
 
 // Only flag "edited" when the update is meaningfully after creation — a fresh
 // row's created_at/updated_at can differ by microseconds.
@@ -26,6 +34,12 @@ export default async function ClarityDetailPage({
 
   const attachments = await listAttachments(clarity.id);
 
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const isOwner = !!user && user.id === clarity.author_id;
+
   return (
     <article className="flex flex-col gap-5 max-w-3xl">
       <Link
@@ -42,6 +56,8 @@ export default async function ClarityDetailPage({
         </span>
       </div>
 
+      <p className="text-sm text-muted -mt-2">by {authorLabel(clarity.author)}</p>
+
       <Markdown source={clarity.body} />
 
       <Attachments attachments={attachments} />
@@ -51,23 +67,25 @@ export default async function ClarityDetailPage({
           {fmtDate(clarity.created_at)}
           {wasEdited(clarity) && ` · edited ${fmtDate(clarity.updated_at)}`}
         </span>
-        <div className="flex gap-3 items-center">
-          <Link
-            href={`/clarities/${clarity.id}/edit`}
-            className="underline underline-offset-4"
-          >
-            Edit
-          </Link>
-          <form action={deleteClarityAndGoHomeAction}>
-            <input type="hidden" name="id" value={clarity.id} />
-            <button
-              type="submit"
-              className="underline underline-offset-4 text-accent"
+        {isOwner && (
+          <div className="flex gap-3 items-center">
+            <Link
+              href={`/clarities/${clarity.id}/edit`}
+              className="underline underline-offset-4"
             >
-              Delete
-            </button>
-          </form>
-        </div>
+              Edit
+            </Link>
+            <form action={deleteClarityAndGoHomeAction}>
+              <input type="hidden" name="id" value={clarity.id} />
+              <button
+                type="submit"
+                className="underline underline-offset-4 text-accent"
+              >
+                Delete
+              </button>
+            </form>
+          </div>
+        )}
       </div>
     </article>
   );

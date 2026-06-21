@@ -1,56 +1,183 @@
-'use server'
+"use server";
 
-import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
-import { createClient } from '../lib/auth-server'
-import { getServerSupabase } from '../lib/supabase-server'
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { requireUser } from "@/app/lib/require-user";
+import {
+  createClarity,
+  updateClarity,
+  deleteClarity,
+  getClarityAuthor,
+} from "@/app/lib/clarities";
+import {
+  deleteAttachments,
+  listAttachments,
+  purgeAttachmentObjects,
+  uploadClarityAttachment,
+} from "@/app/lib/attachments";
+import {
+  MAX_ATTACHMENTS,
+  checkAttachmentFile,
+  validateInput,
+  type ClarityActionState,
+} from "@/app/lib/clarity-types";
 
-export async function login(formData: FormData) {
-  const supabase = await createClient()
-
-  const { error } = await supabase.auth.signInWithPassword({
-    email: formData.get('email') as string,
-    password: formData.get('password') as string,
-  })
-
-  if (error) redirect('/login?error=' + encodeURIComponent(error.message))
-
-  revalidatePath('/', 'layout')
-  redirect('/')
+// Real (non-empty) File entries from the dropzone's hidden input.
+function pickFiles(formData: FormData): File[] {
+  return formData
+    .getAll("attachments")
+    .filter((v): v is File => v instanceof File && v.size > 0);
 }
 
-export async function signup(formData: FormData) {
-  const supabase = await createClient()
+// Server-side re-validation (never trust the client). Returns the first error.
+function firstFileError(files: File[]): string | null {
+  for (const file of files) {
+    const check = checkAttachmentFile(file);
+    if (!check.ok) return check.error;
+  }
+  return null;
+}
 
-  const { data, error } = await supabase.auth.signUp({
-    email: formData.get('email') as string,
-    password: formData.get('password') as string,
-  })
+function parseRemovedIds(formData: FormData): string[] {
+  const raw = formData.get("removed_attachments");
+  if (typeof raw !== "string" || !raw) return [];
+  return raw
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
 
-  if (error) redirect('/signup?error=' + encodeURIComponent(error.message))
+export async function createClarityAction(
+  _prev: ClarityActionState,
+  formData: FormData,
+): Promise<ClarityActionState> {
+  const user = await requireUser();
 
-  const user = data.user
-  if (user) {
-    const admin = getServerSupabase()
-    const { error: profileError } = await admin.from('profiles').insert({
-      id: user.id,
-      username: (formData.get('username') as string) || null,
-      year: Number(formData.get('year')) || null,
-      major: (formData.get('major') as string) || null,
-      faculty: (formData.get('faculty') as string) || null,
-    })
-    if (profileError) {
-      redirect('/signup?error=' + encodeURIComponent(profileError.message))
-    }
+  const result = validateInput({
+    title: formData.get("title"),
+    body: formData.get("body"),
+    module_code: formData.get("module_code"),
+  });
+  if (!result.ok) return { ok: false, error: result.error };
+
+  const files = pickFiles(formData);
+  if (files.length > MAX_ATTACHMENTS) {
+    return { ok: false, error: `At most ${MAX_ATTACHMENTS} attachments allowed.` };
+  }
+  const fileError = firstFileError(files);
+  if (fileError) return { ok: false, error: fileError };
+
+  let clarity;
+  try {
+    clarity = await createClarity(result.value, user.id);
+  } catch (e) {
+    return {
+      ok: false,
+      error: e instanceof Error ? e.message : "Failed to create clarity.",
+    };
   }
 
-  revalidatePath('/', 'layout')
-  redirect('/')
+  // Best-effort uploads; strict validation above makes runtime failures rare.
+  for (const file of files) {
+    await uploadClarityAttachment(clarity.id, file);
+  }
+
+  revalidatePath("/");
+  redirect("/");
 }
 
-export async function signOut() {
-  const supabase = await createClient()
-  await supabase.auth.signOut()
-  revalidatePath('/', 'layout')
-  redirect('/login')
+export async function updateClarityAction(
+  _prev: ClarityActionState,
+  formData: FormData,
+): Promise<ClarityActionState> {
+  const user = await requireUser();
+
+  const id = formData.get("id");
+  if (typeof id !== "string" || !id) {
+    return { ok: false, error: "Missing clarity id." };
+  }
+
+  // Ownership: only the author may edit.
+  if ((await getClarityAuthor(id)) !== user.id) {
+    return { ok: false, error: "You can only edit your own clarities." };
+  }
+
+  const result = validateInput({
+    title: formData.get("title"),
+    body: formData.get("body"),
+    module_code: formData.get("module_code"),
+  });
+  if (!result.ok) return { ok: false, error: result.error };
+
+  const files = pickFiles(formData);
+  const fileError = firstFileError(files);
+  if (fileError) return { ok: false, error: fileError };
+
+  // Enforce the total cap against what survives the requested removals.
+  const removedIds = parseRemovedIds(formData);
+  const existing = await listAttachments(id);
+  const ownIds = new Set(existing.map((a) => a.id));
+  const toRemove = removedIds.filter((rid) => ownIds.has(rid));
+  const surviving = existing.length - toRemove.length;
+  if (surviving + files.length > MAX_ATTACHMENTS) {
+    return { ok: false, error: `At most ${MAX_ATTACHMENTS} attachments allowed.` };
+  }
+
+  try {
+    await updateClarity(id, result.value);
+  } catch (e) {
+    return {
+      ok: false,
+      error: e instanceof Error ? e.message : "Failed to update clarity.",
+    };
+  }
+
+  if (toRemove.length) await deleteAttachments(toRemove);
+  for (const file of files) {
+    await uploadClarityAttachment(id, file);
+  }
+
+  revalidatePath("/");
+  revalidatePath(`/clarities/${id}`);
+  redirect("/");
+}
+
+export async function deleteClarityAction(formData: FormData): Promise<void> {
+  const user = await requireUser();
+
+  const id = formData.get("id");
+  if (typeof id !== "string" || !id) return;
+
+  // Ownership: only the author may delete. Silent no-op otherwise.
+  if ((await getClarityAuthor(id)) !== user.id) return;
+
+  // Remove the Storage objects (rows cascade on the clarity delete).
+  // Best-effort: a cleanup failure must not block deleting the clarity.
+  try {
+    await purgeAttachmentObjects(id);
+  } catch (e) {
+    console.error("purgeAttachmentObjects failed:", e);
+  }
+  await deleteClarity(id);
+  revalidatePath("/");
+}
+
+// Detail-page delete: the row is gone, so we cannot stay on /clarities/[id].
+// Delete, refresh the feed, then send the user back home.
+export async function deleteClarityAndGoHomeAction(
+  formData: FormData,
+): Promise<void> {
+  const user = await requireUser();
+
+  const id = formData.get("id");
+  if (typeof id === "string" && id && (await getClarityAuthor(id)) === user.id) {
+    try {
+      await purgeAttachmentObjects(id);
+    } catch (e) {
+      console.error("purgeAttachmentObjects failed:", e);
+    }
+    await deleteClarity(id);
+    revalidatePath("/");
+  }
+  redirect("/");
 }

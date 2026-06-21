@@ -5,6 +5,15 @@ export type Clarity = {
   module_code: string;
   created_at: string;
   updated_at: string;
+  author_id: string | null;
+};
+
+// A clarity's author, resolved from the profiles table.
+export type Author = {
+  username: string;
+  year: number | null;
+  major: string | null;
+  faculty: string | null;
 };
 
 export type AttachmentKind = "image" | "pdf";
@@ -20,8 +29,15 @@ export type ClarityAttachment = {
   created_at: string;
 };
 
-// A feed row carries its attachment count for the 📎 indicator.
-export type ClarityListItem = Clarity & { attachment_count: number };
+// A feed row carries its attachment count for the 📎 indicator,
+// plus its resolved author profile.
+export type ClarityListItem = Clarity & {
+  attachment_count: number;
+  author: Author | null;
+};
+
+// A single clarity with its resolved author profile (detail page).
+export type ClarityWithAuthor = Clarity & { author: Author | null };
 
 export const ATTACHMENT_BUCKET = "clarity-attachments";
 export const MAX_ATTACHMENTS = 6;
@@ -30,7 +46,7 @@ export const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024; // 10 MB
 // The allowlist: MIME type -> { kind, ext }. Anything else is rejected on both
 // the client and the server. The stored object name uses `ext`, never the
 // user's filename.
-export const ALLOWED_ATTACHMENT_TYPES: Record<
+export const ALLOWED_ATTACHMENT_TYPES: Record
   string,
   { kind: AttachmentKind; ext: string }
 > = {
