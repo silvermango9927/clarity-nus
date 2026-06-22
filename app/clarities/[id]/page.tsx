@@ -6,17 +6,11 @@ import { createClient } from "@/app/lib/auth-server";
 import { Markdown } from "@/app/components/Markdown";
 import { Attachments } from "@/app/components/Attachments";
 import { deleteClarityAndGoHomeAction } from "@/app/actions";
-import type { Author } from "@/app/lib/clarity-types";
+import { AuthorByline } from "@/app/components/AuthorByline";
 
 type Params = Promise<{ id: string }>;
 
 const fmtDate = (iso: string) => new Date(iso).toLocaleString();
-
-const authorLabel = (a: Author | null) => {
-  if (!a) return "Unknown author";
-  const tail = [a.year ? `Y${a.year}` : null, a.major].filter(Boolean).join(" ");
-  return tail ? `@${a.username} · ${tail}` : `@${a.username}`;
-};
 
 // Only flag "edited" when the update is meaningfully after creation — a fresh
 // row's created_at/updated_at can differ by microseconds.
@@ -56,7 +50,9 @@ export default async function ClarityDetailPage({
         </span>
       </div>
 
-      <p className="text-sm text-muted -mt-2">by {authorLabel(clarity.author)}</p>
+      <p className="text-sm text-muted -mt-2">
+     by <AuthorByline author={clarity.author} authorId={clarity.author_id} />
+      </p>
 
       <Markdown source={clarity.body} />
 

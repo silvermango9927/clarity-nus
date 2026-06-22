@@ -44,6 +44,7 @@ async function fetchAuthors(
 export async function listClarities(options?: {
   module?: string;
   q?: string;
+  authorId?: string;
 }): Promise<ClarityListItem[]> {
   const supabase = getServerSupabase();
   let query = supabase
@@ -67,6 +68,11 @@ export async function listClarities(options?: {
       type: "websearch",
       config: "english",
     });
+  }
+
+  const authorId = options?.authorId?.trim();
+  if (authorId) {
+    query = query.eq("author_id", authorId);
   }
 
   const { data, error } = await query;

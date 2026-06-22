@@ -6,7 +6,7 @@ import { deleteClarityAction } from "@/app/actions";
 import { Markdown } from "@/app/components/Markdown";
 import { VoteButtons } from "@/app/components/VoteButtons";
 import { StatsCard } from "@/app/components/StatsCard";
-import type { Author } from "@/app/lib/clarity-types";
+import { AuthorByline } from "@/app/components/AuthorByline";
 
 type SearchParams = Promise<{
   module?: string | string[];
@@ -17,12 +17,6 @@ const first = (v: string | string[] | undefined) =>
   Array.isArray(v) ? v[0] : v;
 
 const fmtDate = (iso: string) => new Date(iso).toLocaleString();
-
-const authorLabel = (a: Author | null) => {
-  if (!a) return "Unknown author";
-  const tail = [a.year ? `Y${a.year}` : null, a.major].filter(Boolean).join(" ");
-  return tail ? `@${a.username} · ${tail}` : `@${a.username}`;
-};
 
 export default async function Home({
   searchParams,
@@ -152,7 +146,7 @@ export default async function Home({
                       userVote={vi.userVote}
                     />
                     <div className="flex items-center gap-2 flex-wrap justify-end">
-                      <span className="text-foreground/70">{authorLabel(c.author)}</span>
+                      <span className="text-foreground/70"><AuthorByline author={c.author} authorId={c.author_id} /></span>
                       <span aria-hidden>·</span>
                       <span>{fmtDate(c.created_at)}</span>
                       {c.attachment_count > 0 && (
