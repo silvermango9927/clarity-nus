@@ -4,6 +4,7 @@ import type { Author } from "@/app/lib/clarity-types";
 
 // A profile is an Author (username/year/major/faculty) plus its id.
 export type Profile = Author & { id: string };
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export type ReputationTier = "Novice" | "Contributor" | "Expert" | "Sage";
 
@@ -23,31 +24,29 @@ export type ProfileStats = {
   tier: ReputationTier;
 };
 
-// Look up one profile by username. Uses .eq (NOT .ilike): usernames often
-// contain underscores, and `_` is a single-char wildcard in ILIKE — exact
-// match avoids that trap. limit(1) instead of maybeSingle() so a (rare)
-// duplicate username can't throw.
-export async function getProfileByUsername(
-  username: string,
-): Promise<Profile | null> {
+// Look up one profile by its id (the auth user id). Routing by id, not
+// username, because usernames are NOT unique — two people can pick the same
+// one, and /u/<username> would then be ambiguous. The id always points to
+// exactly the right person. Bad-format ids return null → 404.
+export async function getProfileById(id: string): Promise<Profile | null> {
+  if (!UUID_RE.test(id)) return null;
+
   const supabase = getServerSupabase();
   const { data, error } = await supabase
     .from("profiles")
     .select("id, username, year, major, faculty")
-    .eq("username", username)
-    .limit(1);
+    .eq("id", id)
+    .maybeSingle();
 
-  if (error) throw new Error(`getProfileByUsername failed: ${error.message}`);
-
-  const row = data?.[0];
-  if (!row) return null;
+  if (error) throw new Error(`getProfileById failed: ${error.message}`);
+  if (!data) return null;
 
   return {
-    id: row.id as string,
-    username: row.username as string,
-    year: (row.year as number | null) ?? null,
-    major: (row.major as string | null) ?? null,
-    faculty: (row.faculty as string | null) ?? null,
+    id: data.id as string,
+    username: (data.username as string | null) ?? "",
+    year: (data.year as number | null) ?? null,
+    major: (data.major as string | null) ?? null,
+    faculty: (data.faculty as string | null) ?? null,
   };
 }
 

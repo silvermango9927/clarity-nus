@@ -51,7 +51,7 @@ export default async function ClarityDetailPage({
       </div>
 
       <p className="text-sm text-muted -mt-2">
-     by <AuthorByline author={clarity.author} />
+     by <AuthorByline author={clarity.author} authorId={clarity.author_id} />
       </p>
 
       <Markdown source={clarity.body} />

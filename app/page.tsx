@@ -146,7 +146,7 @@ export default async function Home({
                       userVote={vi.userVote}
                     />
                     <div className="flex items-center gap-2 flex-wrap justify-end">
-                      <span className="text-foreground/70"><AuthorByline author={c.author} /></span>
+                      <span className="text-foreground/70"><AuthorByline author={c.author} authorId={c.author_id} /></span>
                       <span aria-hidden>·</span>
                       <span>{fmtDate(c.created_at)}</span>
                       {c.attachment_count > 0 && (

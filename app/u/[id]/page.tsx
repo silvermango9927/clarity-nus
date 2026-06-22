@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
-  getProfileByUsername,
+  getProfileById,
   getProfileStats,
 } from "@/app/lib/profiles";
 import { listClarities } from "@/app/lib/clarities";
 import { getVoteInfo } from "@/app/lib/votes";
 
-type Params = Promise<{ username: string }>;
+type Params = Promise<{ id: string }>;
 
 const fmtDate = (iso: string) => new Date(iso).toLocaleDateString();
 
@@ -19,8 +19,8 @@ const TIER_BLURB: Record<string, string> = {
 };
 
 export default async function ProfilePage({ params }: { params: Params }) {
-  const { username } = await params;
-  const profile = await getProfileByUsername(decodeURIComponent(username));
+  const { id } = await params;
+  const profile = await getProfileById(id);
   if (!profile) notFound();
 
   const stats = await getProfileStats(profile.id);
