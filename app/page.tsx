@@ -8,7 +8,10 @@ import { VoteButtons } from "@/app/components/VoteButtons";
 import { StatsCard } from "@/app/components/StatsCard";
 import type { Author } from "@/app/lib/clarity-types";
 
-type SearchParams = Promise<{ module?: string | string[] }>;
+type SearchParams = Promise<{
+  module?: string | string[];
+  q?: string | string[];
+}>;
 
 const first = (v: string | string[] | undefined) =>
   Array.isArray(v) ? v[0] : v;
@@ -28,7 +31,11 @@ export default async function Home({
 }) {
   const params = await searchParams;
   const moduleFilter = first(params.module)?.trim() ?? "";
-  const clarities = await listClarities({ module: moduleFilter || undefined });
+  const searchQuery = first(params.q)?.trim() ?? "";
+  const clarities = await listClarities({
+    module: moduleFilter || undefined,
+    q: searchQuery || undefined,
+  });
 
   const supabase = await createClient();
   const {
@@ -53,40 +60,51 @@ export default async function Home({
           sitting.
         </p>
 
-        <form method="get" className="flex gap-2 items-center">
+        <form method="get" className="flex flex-col gap-2">
           <input
-            name="module"
-            defaultValue={moduleFilter}
-            placeholder="Filter by module code — e.g. CS2030S"
-            className="flex-1 bg-card border border-rule rounded-xl px-4 py-2.5 text-sm placeholder:text-muted focus:outline-none focus:border-accent"
+            name="q"
+            defaultValue={searchQuery}
+            placeholder="Search clarities — title, body, or module"
+            className="bg-card border border-rule rounded-xl px-4 py-2.5 text-sm placeholder:text-muted focus:outline-none focus:border-accent"
           />
-          <button
-            type="submit"
-            className="rounded-xl bg-foreground text-background px-4 py-2.5 text-sm font-medium hover:opacity-90 transition-opacity"
-          >
-            Filter
-          </button>
-          {moduleFilter && (
-            <Link
-              href="/"
-              className="text-sm text-muted underline underline-offset-4 px-1"
+          <div className="flex gap-2 items-center">
+            <input
+              name="module"
+              defaultValue={moduleFilter}
+              placeholder="Module code — e.g. CS2030S"
+              className="flex-1 bg-card border border-rule rounded-xl px-4 py-2.5 text-sm placeholder:text-muted focus:outline-none focus:border-accent"
+            />
+            <button
+              type="submit"
+              className="rounded-xl bg-foreground text-background px-4 py-2.5 text-sm font-medium hover:opacity-90 transition-opacity"
             >
-              Clear
-            </Link>
-          )}
+              Search
+            </button>
+            {(searchQuery || moduleFilter) && (
+              <Link
+                href="/"
+                className="text-sm text-muted underline underline-offset-4 px-1"
+              >
+                Clear
+              </Link>
+            )}
+          </div>
         </form>
 
         <div className="flex items-center gap-3 text-[11px] uppercase tracking-[0.16em] text-muted">
           <span>
-            {moduleFilter ? `Filtered · ${moduleFilter.toUpperCase()}` : "Newest first"}
+            {searchQuery && `Search · "${searchQuery}"`}
+            {searchQuery && moduleFilter && " · "}
+            {moduleFilter && moduleFilter.toUpperCase()}
+            {!searchQuery && !moduleFilter && "Newest first"}
           </span>
           <span className="flex-1 h-px bg-rule" />
         </div>
 
         {clarities.length === 0 ? (
           <p className="text-muted">
-            {moduleFilter ? (
-              `No clarities found for "${moduleFilter}".`
+            {searchQuery || moduleFilter ? (
+              `No clarities found${searchQuery ? ` for "${searchQuery}"` : ""}${moduleFilter ? ` in ${moduleFilter.toUpperCase()}` : ""}.`
             ) : (
               <>
                 No clarities yet.{" "}
