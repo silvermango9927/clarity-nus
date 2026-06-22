@@ -43,6 +43,7 @@ async function fetchAuthors(
 
 export async function listClarities(options?: {
   module?: string;
+  q?: string;
 }): Promise<ClarityListItem[]> {
   const supabase = getServerSupabase();
   let query = supabase
@@ -54,6 +55,18 @@ export async function listClarities(options?: {
   if (mod) {
     const esc = mod.replace(/[\\%_]/g, "\\$&");
     query = query.ilike("module_code", `%${esc}%`);
+  }
+
+  // Full-text search. `websearch` parses the raw query the way Google does
+  // (quotes, OR, -exclude) and never throws on weird input, so no escaping
+  // is needed. Only apply it when there's an actual query — an empty string
+  // would match nothing.
+  const q = options?.q?.trim();
+  if (q) {
+    query = query.textSearch("search_vector", q, {
+      type: "websearch",
+      config: "english",
+    });
   }
 
   const { data, error } = await query;
